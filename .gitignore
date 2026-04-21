@@ -1,0 +1,15 @@
+# Python
+__pycache__/
+*.py[cod]
+
+# Local throwaway artifacts
+tmp_inspect*
+
+# Keep image directory topology, but do not store binary image payloads in git.
+**/import_images/**
+!**/import_images/**/
+!**/import_images/**/.gitkeep
+
+upload/vvm_images/**
+!upload/vvm_images/**/
+!upload/vvm_images/**/.gitkeep
