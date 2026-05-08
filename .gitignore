@@ -4,12 +4,16 @@ __pycache__/
 
 # Local throwaway artifacts
 tmp_inspect*
+.playwright-mcp/
 
-# Keep image directory topology, but do not store binary image payloads in git.
-**/import_images/**
-!**/import_images/**/
-!**/import_images/**/.gitkeep
+# Raw/manual local image dumps
+макитаапрель/
 
-upload/vvm_images/**
-!upload/vvm_images/**/
-!upload/vvm_images/**/.gitkeep
+# Source iteration payloads and binary working files
+**/input/
+**/work/
+*.pdf
+
+# Image folders are local-only; repo stores code and reports, not image payloads or topology
+**/import_images/
+upload/vvm_images/

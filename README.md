@@ -1,362 +1,333 @@
 # Makita Image Collection Pipeline
 
-## What This Project Is
+## Назначение проекта
 
-This project is a practical pipeline for filling missing product images in Bitrix exports.
+Это полуавтоматический пайплайн для заполнения отсутствующих изображений товаров в Bitrix-экспортах.
 
-The job was done in two large waves:
-- tools
-- accessories
+Проект решал три большие задачи:
+- собрать картинки для `Makita tools`
+- собрать картинки для `Makita accessories`
+- отдельно закрыть блок `Elitech + TEH`
 
-The core idea stayed the same in both cases:
-- export products from Bitrix to Excel
-- keep only rows with empty image columns
-- use article number as the main key
-- search external sources one by one
-- download images into per-article folders
-- manually review dirty sources when needed
-- rebuild the remaining tail from actual surviving folders, not from optimistic reports
-- merge accepted results into a final delivery
-- build an Excel file for Bitrix import
+Дополнительно:
+- позже был сделан ручной добор placeholder-хвоста через папку `макитаапрель`
 
-## Core Principles
+## Общая идея пайплайна
 
-### 1. Article number is the truth
+Базовая схема работы в проекте была такой:
 
-Everything is matched by `Артикул [ARTIKUL]`.
+1. выгрузить Excel из Bitrix
+2. отфильтровать только товары без картинок
+3. использовать артикул как главный ключ
+4. искать внешний источник
+5. делать под источник отдельную итерацию
+6. скачивать изображения в папки по артикулам
+7. вручную вычищать грязные результаты, если источник шумный
+8. пересобирать честный остаток не по отчёту, а по реально выжившим папкам
+9. собирать финальную поставку
+10. делать Excel для импорта в Bitrix
 
-We do not really care whether the product is a tool, accessory, part, battery, bag, or attachment if the article is exact and stable.
+## Главные принципы
 
-### 2. The real truth is folders, not reports
+### 1. Артикул — это истина
 
-Many source reports were optimistic.
-Some sites returned:
-- watermarked images
-- placeholders
-- wrong images on the correct product card
-- the same image for many different articles
+В этом проекте всё матчится по `Артикул [ARTIKUL]`.
 
-Because of that, after every manual review we treated this as the only honest state:
-- if folder exists
-- and it contains `preview.webp`
-- then the article is considered covered
+Нам неважно, инструмент это, аксессуар, батарея, ремень, насадка или запчасть — если артикул точный, это наш основной идентификатор.
 
-Everything else is not covered.
+### 2. Папки важнее отчётов
 
-### 3. Manual review is part of the pipeline
+Многие сайты и многие прогоны выглядели “успешными” только по Excel-отчёту, но при ручной проверке оказывалось, что:
+- картинка с вотермарком
+- картинка-заглушка
+- картинка не от того товара
+- одна и та же картинка повторяется на десятках карточек
 
-This project is intentionally semi-automatic.
+Поэтому настоящее правило проекта:
+- если папка существует
+- и в ней есть `preview.webp`
+- значит товар закрыт
 
-Why:
-- some sites had anti-bot protection
-- some sites had wrong images even on valid product pages
-- some sites had source contamination from other shops
-- some sites had hidden watermarks
+Если этого нет, товар не считается закрытым, даже если старый отчёт писал `OK`.
 
-So the correct operating model is:
-- automate collection aggressively
-- review suspicious sources manually
-- rebuild remainder from surviving folders
+### 3. Ручная проверка — нормальная часть процесса
 
-### 4. Source quality matters more than raw coverage
+Этот проект специально строился как полуавтоматический, а не “магически полностью автоматический”.
 
-A source that gives 500 wrong images is worse than a source that gives 20 clean ones.
+Почему:
+- у части источников антибот
+- у части источников чужие вотермарки
+- у части источников неправильные картинки на правильных карточках
+- у части источников placeholder-контент
 
-That is why several apparently strong domains were rejected even after good match counts.
+Правильная модель работы:
+- автоматизировать сбор
+- руками выбрасывать мусор
+- после этого честно пересобирать остаток
 
-## Legacy Root Scripts
+### 4. Качество важнее покрытия
 
-These are the original reusable scripts in the root:
+Источник, который даёт `500` плохих картинок, хуже источника, который даёт `20` чистых.
+
+Из-за этого много, казалось бы, “сильных” сайтов были забракованы.
+
+## Структура проекта
+
+Корень проекта:
 - [filter_makita.py](C:\Users\Valentine\Desktop\makita\py_makita\upload\filter_makita.py)
 - [download_imgs.py](C:\Users\Valentine\Desktop\makita\py_makita\upload\download_imgs.py)
 - [links_check.py](C:\Users\Valentine\Desktop\makita\py_makita\upload\links_check.py)
 - [links_added.py](C:\Users\Valentine\Desktop\makita\py_makita\upload\links_added.py)
+- [PROJECT_CONTEXT.md](C:\Users\Valentine\Desktop\makita\py_makita\upload\PROJECT_CONTEXT.md)
+- [NEXT_CHAT_HANDOFF.md](C:\Users\Valentine\Desktop\makita\py_makita\upload\NEXT_CHAT_HANDOFF.md)
 
-Important note:
-- [links_added.py](C:\Users\Valentine\Desktop\makita\py_makita\upload\links_added.py) is the old style generator for `pictures_with_links.xlsx`-like files.
+Основные рабочие зоны:
+- `iterations`
+- `final_delivery_2026-04-09`
+- `final_accessories_delivery_2026-04-18`
+- `final_elitech_and_teh_delivery_2026-04-27`
+- `makitaapril_delivery_2026-05-07`
 
-## Final Deliveries
+## Как устроены итерации
 
-### Tools
+Правило проекта:
+- один источник = одна отдельная папка-итерация
 
-Final tools delivery:
-- [final_delivery_2026-04-09](C:\Users\Valentine\Desktop\makita\py_makita\upload\final_delivery_2026-04-09)
-
-Contains:
-- merged `import_images`
-- [final_report.xlsx](C:\Users\Valentine\Desktop\makita\py_makita\upload\final_delivery_2026-04-09\final_report.xlsx)
-- [pictures_for_import.xlsx](C:\Users\Valentine\Desktop\makita\py_makita\upload\final_delivery_2026-04-09\pictures_for_import.xlsx)
-- [pictures_for_bitrix_import.xlsx](C:\Users\Valentine\Desktop\makita\py_makita\upload\final_delivery_2026-04-09\pictures_for_bitrix_import.xlsx)
-
-Tools final logic:
-- real images were merged from accepted tool iterations
-- unresolved tail was filled with `placeholder.webp`
-
-### Accessories
-
-Final accessories delivery:
-- [final_accessories_delivery_2026-04-18](C:\Users\Valentine\Desktop\makita\py_makita\upload\final_accessories_delivery_2026-04-18)
-
-Contains:
-- merged `import_images`
-- [final_report.xlsx](C:\Users\Valentine\Desktop\makita\py_makita\upload\final_accessories_delivery_2026-04-18\final_report.xlsx)
-- [pictures_for_import.xlsx](C:\Users\Valentine\Desktop\makita\py_makita\upload\final_accessories_delivery_2026-04-18\pictures_for_import.xlsx)
-- [pictures_for_bitrix_import.xlsx](C:\Users\Valentine\Desktop\makita\py_makita\upload\final_accessories_delivery_2026-04-18\pictures_for_bitrix_import.xlsx)
-
-Final accessory counts:
-- baseline unique articles after normalization: `2882`
-- real images found: `2603`
-- unresolved and covered by placeholder: `279`
-- total final folders: `2882`
-
-### Bitrix import path format
-
-Final import Excel files use:
-- `/upload/vvm_images/import_images/{FOLDER_NAME}/preview.webp`
-- gallery images in the same folder
-
-Important nuance:
-- if an article contains filesystem-invalid characters, folder name is sanitized
-- example:
-  - article: `D-31669/1`
-  - folder: `D-31669_1`
-
-Bitrix still matches the row by article column, not by folder name.
-
-## Main Working Flow
-
-### 1. Start from Excel export
-
-For tools:
-- export `pictures.xlsx`
-- filter products without images
-
-For accessories:
-- additionally filter by main section:
-  - `Расходные материалы и аксессуары`
-
-Main accessory filter output:
-- [accessories_without_images.xlsx](C:\Users\Valentine\Desktop\makita\py_makita\upload\iterations\accessories\accessories_without_images.xlsx)
-
-### 2. Create iteration per source
-
-Rule:
-- one source = one dedicated iteration directory
-
-Typical iteration structure:
+Обычно внутри итерации есть:
 - `input`
 - `output`
-- downloader script
-- remainder builder
-- local `README.md`
+- скрипт скачивания
+- скрипт пересборки остатка
+- локальный `README.md`
 
-This kept the process debuggable and reversible.
+Такой подход позволял:
+- не мешать источники между собой
+- откатывать неудачные прогоны
+- пересобирать хвост после ручной проверки
+- видеть происхождение каждой картинки
 
-### 3. Test source before full run
+## Что делали по инструментам
 
-Never assume a site is useful.
+Финальная папка:
+- [final_delivery_2026-04-09](C:\Users\Valentine\Desktop\makita\py_makita\upload\final_delivery_2026-04-09)
 
-Before full downloader work:
-- test a small article sample
-- verify exact product match
-- verify image is real
-- verify no watermark
-- verify no placeholders
-- verify no repeated generic image across many articles
+Содержит:
+- `import_images`
+- `final_report.xlsx`
+- `pictures_for_import.xlsx`
+- `pictures_for_bitrix_import.xlsx`
 
-If source is weak:
-- reject it
-- or use it only as a thin singleton source
+Итог:
+- всего товаров: `165`
+- реальные картинки: `124`
+- placeholder: `41`
 
-### 4. Download into per-article folders
+Фактически в финал вошли три источника:
+- `makita.one`
+- `makitapro.ru`
+- `макитакиров.рф`
 
-Expected target structure:
-- `import_images/{ARTICLE}/preview.webp`
-- optional `gallery_01.webp`, `gallery_02.webp`, etc.
+Потом была попытка ещё раз добить хвост инструментов:
+- `iterations\tools_tail_2026-04-27`
 
-### 5. Manually review suspicious sources
+Но результат оказался мусорным, и эта итерация была сознательно удалена.
 
-Typical manual actions:
-- delete folders with wrong images
-- delete watermarked folders
-- keep only valid images
-- if only one valid image remains, normalize it as `preview.webp`
+Важно:
+- если в будущем кто-то спросит “а может там ещё был хвостовой прогон по инструментам” — нет, он уже вычищен как некачественный.
 
-### 6. Rebuild honest remainder
+## Что делали по аксессуарам
 
-This step is mandatory after manual review.
+Финальная папка:
+- [final_accessories_delivery_2026-04-18](C:\Users\Valentine\Desktop\makita\py_makita\upload\final_accessories_delivery_2026-04-18)
 
-Pattern:
-- scan `output/import_images`
-- keep only folders containing `preview.webp`
-- remove those articles from the input Excel
-- save a fresh `remaining_after_*.xlsx`
+Содержит:
+- `import_images`
+- `final_report.xlsx`
+- `pictures_for_import.xlsx`
+- `pictures_for_bitrix_import.xlsx`
 
-### 7. Merge accepted sources
+Итог:
+- всего товаров: `2882`
+- реальные картинки: `2603`
+- placeholder: `279`
 
-When enough layers are collected:
-- merge accepted iterations by source priority
-- keep first valid source per article
-- generate final report
-- add placeholders for unresolved articles if needed
-- generate import Excel
+Это была самая большая и самая тяжёлая часть проекта.
 
-## Source Strategy That Worked
+### Подход по аксессуарам
 
-### Bulk sources
+Сначала работали обычными полными итерациями по сильным источникам.
 
-These gave meaningful coverage and were worth full iterations.
+Потом, когда хвост стал слишком тяжёлым, ввели отдельный тонкий слой:
+- [thin_sources_2026-04-18](C:\Users\Valentine\Desktop\makita\py_makita\upload\iterations\accessories\thin_sources_2026-04-18)
 
-Accessory wave strong sources included:
+Идея была правильной:
+- даже если сайт даёт только 1 хороший товар, всё равно забираем его
+- не теряем честные единички
+
+### Источники, которые реально дали основной результат
+
+Самые важные:
+- `artifex24.de clean`
+- `makita-russia.shop`
+- `makitapro.ru`
 - `makitatools.com`
 - `makitastool.com`
 - `spijkerspecialist.nl`
-- `artifex24.de clean`
 - `makita-shop.ch`
-- `makita-russia.shop`
-- `makitapro.ru`
+- `emmetistore.com`
+- `makita.net.ua`
 
-### Thin sources
+### Что не сработало
 
-When the tail became too hard, a new rule was introduced:
-- even if a source gives only 1 honest article, still collect it
-- do not lose good singletons
-- keep them in a dedicated thin-source layer
+Частые причины брака:
+- вотермарки
+- placeholder-картинки
+- неправильная картинка на корректной карточке
+- одинаковая картинка на множестве товаров
+- антибот / `403`
+- шумный поиск и ложные совпадения
 
-Thin-source collector:
-- [thin_sources_2026-04-18](C:\Users\Valentine\Desktop\makita\py_makita\upload\iterations\accessories\thin_sources_2026-04-18)
+Ключевые плохие паттерны:
+- `sparepartsworld.co.uk` — сильное покрытие, но вотермарки
+- `toolnation` — много совпадений, но картинки-заглушки
+- ряд локальных сайтов с `no_img`, `kein.jpg`, `image-not-found`
 
-This was the right decision.
-At the end, wide-source hunting was no longer efficient, but exact singleton recovery still reduced the tail.
+### Хвост после финала
 
-## Sources That Looked Good But Were Rejected
+После финальной аксессуарной поставки был хвост:
+- `279` placeholder-позиций
 
-These patterns happened often:
+Позже была попытка ещё раз догрызть хвост:
+- `iterations\accessories\makitapro_tail_2026-04-27`
 
-### Watermarks
+Результат был признан хламом и итерация была удалена.
 
-Examples:
-- `sparepartsworld.co.uk`
-- `makita-pt`
-- parts of `makitapro`
-- parts of `makita.net.ua`
+То есть текущая честная база по аксессуарам — это всё ещё:
+- [final_accessories_delivery_2026-04-18](C:\Users\Valentine\Desktop\makita\py_makita\upload\final_accessories_delivery_2026-04-18)
+- плюс ручная доборка `макитаапрель`
 
-Rule:
-- reject for final use unless manually cleaned
+## Что делали по Elitech + TEH
 
-### Wrong images on real product cards
+Финальная папка:
+- [final_elitech_and_teh_delivery_2026-04-27](C:\Users\Valentine\Desktop\makita\py_makita\upload\final_elitech_and_teh_delivery_2026-04-27)
 
-Very important example:
-- `makita.one`
+Содержит:
+- `import_images`
+- `final_report.xlsx`
+- `sources_summary.xlsx`
+- `pictures_for_import.xlsx`
+- `pictures_for_bitrix_import.xlsx`
 
-Problem:
-- article and product title could be correct
-- but image on the card could belong to a completely different product
+Итог:
+- всего товаров: `234`
+- закрыто: `234`
+- placeholder: `0`
 
-This cannot be solved reliably by pure automation.
-It requires visual review.
+Источники:
+- `elitech.ru` official
+- `teh-russia.ru`
+- `ELITECH_2025` PDF exact layer
+- `ELITECH_2025` PDF family layer
+- `elitech-m.ru` + cross-check по `makita-land`
 
-### Repeated placeholders
+Отдельно важно:
+- был баг в `pictures_for_bitrix_import.xlsx` с `/nan`
+- он был исправлен, и пользователь подтвердил, что реальная загрузка на сайт прошла успешно
 
-Examples:
-- generic `image-not-found`
-- `machine-onderdeel_*.png`
-- `no_img.png`
-- one identical image used for many articles
+## Placeholder-логика
 
-Rule:
-- reject source or narrow acceptance rules hard
+Общий placeholder-список:
+- [placeholder_items_2026-04-27.xlsx](C:\Users\Valentine\Desktop\makita\py_makita\upload\placeholder_items_2026-04-27.xlsx)
 
-### Anti-bot / unstable access
+Итоги:
+- всего placeholder: `320`
+- инструменты: `41`
+- аксессуары: `279`
 
-Examples:
-- `vseinstrumenti.ru`
-- some regional or marketplace sites
+## Ручная доборка через папку `макитаапрель`
 
-Rule:
-- if source needs repeated manual browser intervention, do not build the pipeline around it
+Позже пользователь вручную собрал часть оставшихся картинок в отдельную папку:
+- `макитаапрель`
 
-## Anti-patterns Discovered
+Проверочный файл:
+- [makitaapril_placeholder_check_2026-05-07.xlsx](C:\Users\Valentine\Desktop\makita\py_makita\upload\makitaapril_placeholder_check_2026-05-07.xlsx)
 
-### Optimistic report is dangerous
+Сводка по ручной проверке:
+- из `320` placeholder-позиций вручную было найдено `291`
+- не найдено осталось `29`
 
-A downloader report may say `OK`, but after review the source may become much smaller.
+Потом эта ручная сборка была нормализована в отдельную поставку:
+- [makitaapril_delivery_2026-05-07](C:\Users\Valentine\Desktop\makita\py_makita\upload\makitaapril_delivery_2026-05-07)
 
-Always rebuild from real folders.
+Что внутри:
+- `import_images`
+- `final_report.xlsx`
+- `pictures_for_import.xlsx`
+- `pictures_for_bitrix_import.xlsx`
+- `build_delivery.py`
+- `rebuild_import_from_images.py`
 
-### Search pages pretending to be product matches
+Итог:
+- нормализовано вручную найденных товаров: `291`
+- потом вручную добавлен `CP100DZ`
+- итоговая импортная Excel для этой поставки содержит `292` строки
 
-Some sites echo the article in:
-- query string
-- page title
-- search text
+Эта папка уже приведена к нашему стандарту:
+- `preview.webp`
+- `gallery_01.webp`, `gallery_02.webp` и т.д.
+- корректные Bitrix-пути
 
-That creates false positives.
+## Правила сборки импортных Excel
 
-Only trust:
-- exact product card
-- exact article reference on the card
-- real product image
+Нужные колонки:
+- `Артикул [ARTIKUL]`
+- `Картинка для анонса (путь)`
+- `Картинки галереи [MORE_PHOTO]`
 
-### Marketplace and dealer contamination
+Bitrix-путь должен быть:
+- `/upload/vvm_images/import_images/{FOLDER}/{filename}`
 
-Some sites aggregate images from:
-- other stores
-- distributor feeds
-- branded placeholders
+Если в папке только одна картинка:
+- она идёт в preview
 
-The article may still be correct, but image may be watermarked or foreign.
+Если картинок больше:
+- первая идёт в `preview.webp`
+- остальные в `gallery_01.webp`, `gallery_02.webp` и так далее
 
-## Files Worth Keeping
+## Важная файловая оговорка
 
-Keep:
-- final deliveries
-- accepted iteration folders
-- source tracker
-- thin-source collector
-- root legacy scripts
-- placeholder file
-- this `README`
-- [PROJECT_CONTEXT.md](C:\Users\Valentine\Desktop\makita\py_makita\upload\PROJECT_CONTEXT.md)
+Если артикул содержит недопустимый для имени папки символ, имя папки санитизируется.
 
-These are the minimum useful memory of the project.
+Пример:
+- артикул: `D-31669/1`
+- папка: `D-31669_1`
 
-## Files Already Considered Disposable
+При этом в импортном Excel артикул остаётся нормальным, чтобы Bitrix матчился именно по нему.
 
-Safe to remove when they appear again:
-- `tmp_inspect*`
-- one-off HTML probe dumps
-- `__pycache__`
-- rejected source iterations with no reusable value
-- one-off sample scripts used only for probing
+## Что точно не надо делать
 
-## If This Work Must Be Repeated Later
+- не верить старым `OK` в промежуточных отчётах без проверки папок
+- не возвращать удалённые хвостовые итерации по инструментам и аксессуарам
+- не использовать сайты с вотермарками и placeholder-изображениями только ради красивого процента покрытия
+- не трогать исходную ручную папку, если уже есть нормализованная отдельная поставка
 
-Recommended restart procedure:
+## Что читать в новом чате
 
-1. Read this file first.
-2. Open [PROJECT_CONTEXT.md](C:\Users\Valentine\Desktop\makita\py_makita\upload\PROJECT_CONTEXT.md) for the short current snapshot.
-3. For accessories, inspect [SOURCES_TRACKER.md](C:\Users\Valentine\Desktop\makita\py_makita\upload\iterations\accessories\SOURCES_TRACKER.md) before testing new sources.
-4. Start from the newest honest remainder file, not from an old optimistic report.
-5. When a source is suspicious, prefer manual review early instead of trusting raw download counts.
-6. When the tail becomes small and ugly, switch from bulk-source hunting to singleton hunting.
-7. Before final delivery, merge everything once, then add placeholders only at the very end.
+Порядок такой:
+1. [PROJECT_CONTEXT.md](C:\Users\Valentine\Desktop\makita\py_makita\upload\PROJECT_CONTEXT.md)
+2. [NEXT_CHAT_HANDOFF.md](C:\Users\Valentine\Desktop\makita\py_makita\upload\NEXT_CHAT_HANDOFF.md)
+3. при необходимости этот `README`
+4. потом уже конкретную финальную папку или конкретный блок
 
-## Quick Current Snapshot
+## Если придётся продолжать проект потом
 
-### Tools
+Нормальная стратегия продолжения:
+- работать только от актуальных финальных папок и честных списков
+- если нужно добирать новый хвост, сначала собрать baseline
+- потом снова идти по схеме “источник → ручная проверка → честный остаток”
 
-Final ready delivery:
-- [final_delivery_2026-04-09](C:\Users\Valentine\Desktop\makita\py_makita\upload\final_delivery_2026-04-09)
-
-### Accessories
-
-Final ready delivery:
-- [final_accessories_delivery_2026-04-18](C:\Users\Valentine\Desktop\makita\upload\final_accessories_delivery_2026-04-18)
-
-Accessory result:
-- `2882` unique articles in final set
-- `2603` with real images
-- `279` with placeholder
-
-That is the current practical endpoint of the project.
+Но на текущий момент проект не в состоянии “сырой разработки”.
+Он уже в состоянии:
+- стабильные финальные поставки
+- отдельная ручная доборка
+- понятная история решений
