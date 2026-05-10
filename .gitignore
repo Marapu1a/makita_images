@@ -8,11 +8,14 @@ tmp_inspect*
 
 # Raw/manual local image dumps
 макитаапрель/
+by_hands/
 
 # Source iteration payloads and binary working files
 **/input/
 **/work/
 *.pdf
+export_btx.xlsx
+Результат скриптов/
 
 # Image folders are local-only; repo stores code and reports, not image payloads or topology
 **/import_images/

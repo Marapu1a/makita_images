@@ -11,3 +11,11 @@ Build scripts:
 
 - `build_final_delivery.py`
 - `build_import_excel.py`
+
+Verified counts:
+- rows / folders: `234`
+- covered articles: `234`
+- placeholder articles: `0`
+- import `.webp` files: `1048`
+- `pictures_for_bitrix_import.xlsx` rows: `234`
+- `/nan` gallery paths: `0`

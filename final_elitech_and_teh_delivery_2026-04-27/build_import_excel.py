@@ -12,12 +12,12 @@ BITRIX_XLSX = FINAL_DIR / "pictures_for_bitrix_import.xlsx"
 
 
 def build_gallery(value: str, folder: str, bitrix: bool) -> str:
-    if pd.isna(value) or not value:
+    if pd.isna(value) or not str(value).strip() or str(value).strip().lower() == "nan":
         return ""
-    files = [x.strip() for x in str(value).split("|") if x and str(x).strip() and str(x).strip().lower() != "nan"]
+    files = [x.strip() for x in str(value).split("|") if x and x.strip() and x.strip().lower() != "nan"]
     if bitrix:
-        return "|".join(f"/upload/vvm_images/import_images/{folder}/{name}" for name in files)
-    return "|".join(f"/final_elitech_and_teh_delivery_2026-04-27/import_images/{folder}/{name}" for name in files)
+        return ";".join(f"/upload/vvm_images/import_images/{folder}/{name}" for name in files)
+    return ";".join(f"/final_elitech_and_teh_delivery_2026-04-27/import_images/{folder}/{name}" for name in files)
 
 
 def main() -> None:

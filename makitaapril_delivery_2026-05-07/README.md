@@ -21,3 +21,13 @@ Rules:
 - exported files are converted to `webp`
 - first image becomes `preview.webp`
 - remaining images become `gallery_01.webp`, `gallery_02.webp`, etc.
+
+Verified counts:
+- manually found from placeholder list: `291`
+- extra manually added article: `CP100DZ`
+- `final_report.xlsx` rows: `291`
+- `pictures_for_bitrix_import.xlsx` rows: `292`
+- import `.webp` files: `347`
+
+Note:
+- `import_images` also contains root-level service placeholder files; they are not counted as product images.

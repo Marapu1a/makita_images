@@ -12,6 +12,8 @@ Important:
 - placeholder articles: 279
 - unresolved articles covered by placeholder: 279
 - conflicts resolved by source priority: 27
+- import `.webp` files: 4718
+- `pictures_for_bitrix_import.xlsx` rows: 2882
 
 Source priority:
 - `makitatools.com` (makitatools_2026-04-16)

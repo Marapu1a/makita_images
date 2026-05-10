@@ -11,6 +11,7 @@
 - `Makita accessories`
 - `Elitech + TEH`
 - ручная доборка части placeholder-хвоста в папке `макитаапрель`
+- новый блок из папки `Результат скриптов` / поставка `new_items_delivery_2026-05-09`
 
 ## Что считать истиной
 
@@ -22,6 +23,20 @@
 1. смотрим финальную папку поставки
 2. смотрим `final_report.xlsx`
 3. смотрим импортный Excel
+
+## Проверенная стартовая сверка
+
+Состояние по финальным импортным Excel и `.webp` в товарных папках:
+
+| Блок | Строк импорта | Реальные картинки | Placeholder | Импортных `.webp` |
+| --- | ---: | ---: | ---: | ---: |
+| Инструменты | `165` | `124` | `41` | `261` |
+| Аксессуары | `2882` | `2603` | `279` | `4718` |
+| Elitech + TEH | `234` | `234` | `0` | `1048` |
+| Итого по трём финальным поставкам | `3281` | `2961` | `320` | `6027` |
+| Ручная доборка `макитаапрель` | `292` | `292` | `0` | `347` |
+
+В файловых подсчётах считаются только импортные `.webp`. Технические `.gitkeep` и служебные placeholder-файлы в корне поставок не считаются товарными изображениями.
 
 ## Главные файлы, которые надо открыть в новом чате
 
@@ -51,6 +66,7 @@
 - всего товаров: `165`
 - реальные картинки: `124`
 - placeholder: `41`
+- импортных `.webp`: `261`
 
 ### 2. Аксессуары
 
@@ -67,6 +83,7 @@
 - всего товаров: `2882`
 - реальные картинки: `2603`
 - placeholder: `279`
+- импортных `.webp`: `4718`
 
 ### 3. Elitech + TEH
 
@@ -84,6 +101,7 @@
 - всего товаров: `234`
 - закрыто: `234`
 - placeholder: `0`
+- импортных `.webp`: `1048`
 
 ### 4. Ручная доборка placeholder-хвоста
 
@@ -102,9 +120,45 @@
 - из них нормализовано в поставку: `291`
 - потом вручную был добавлен ещё `CP100DZ`
 - итоговая поставка `makitaapril_delivery_2026-05-07`: `292` строк в импортном Excel
+- импортных `.webp`: `347`
 
 Проверочный файл:
 - [makitaapril_placeholder_check_2026-05-07.xlsx](C:\Users\Valentine\Desktop\makita\py_makita\upload\makitaapril_placeholder_check_2026-05-07.xlsx)
+
+### 5. Новый блок из `Результат скриптов`
+
+Текущая рабочая поставка:
+- [new_items_delivery_2026-05-09](C:\Users\Valentine\Desktop\makita\py_makita\upload\new_items_delivery_2026-05-09)
+
+Что важно:
+- это отдельный поздний блок, он не входит в старые финальные цифры по инструментам / аксессуарам / Elitech+TEH
+- в нём смешаны `Elitech` и `Makita`
+- `Elitech` в этом блоке уже закрыт полностью
+- текущий хвост остался только по `Makita`
+
+Актуальная сводка:
+- всего товаров: `585`
+- реальные картинки: `577`
+- placeholder: `8`
+
+Разбивка:
+- `elitech`: `496 / 496` закрыто
+- `makita_tools`: `38` real, `0` placeholder
+- `makita_accessories`: `32` real, `0` placeholder
+- `makita_spare_parts`: `11` real, `8` placeholder
+
+Последний честный точечный добор:
+- [iterations/new_items_2026-05-09/makita_exact_tail_2026-05-10](C:\Users\Valentine\Desktop\makita\py_makita\upload\iterations\new_items_2026-05-09\makita_exact_tail_2026-05-10)
+- добрал хвост до `15`, после ручной доборки `by_hands` и финализации осталось `8`
+
+Текущий честный хвост:
+- [remaining_placeholders.xlsx](C:\Users\Valentine\Desktop\makita\py_makita\upload\new_items_delivery_2026-05-09\remaining_placeholders.xlsx)
+
+Дополнительный служебный экспорт по Bitrix-разделу `Запасные части`:
+- [spare_parts_placeholder_import_2026-05-10.xlsx](C:\Users\Valentine\Desktop\makita\py_makita\upload\spare_parts_placeholder_import_2026-05-10.xlsx)
+- лист `spare_parts_import`: `47454` строк с placeholder для импорта
+- лист `other_missing_all`: `2900` прочих товаров без анонс-картинки
+- лист `other_missing_with_article`: `1916` прочих товаров без анонс-картинки и с непустым артикулом
 
 ## Placeholder-файл
 
